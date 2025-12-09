@@ -1,0 +1,68 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    image: couple-watch-app
+    container_name: couple-watch-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - couple-watch-network
+    depends_on:
+      - db
+      - redis
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      REDIS_HOST: redis
+
+  nginx:
+    image: nginx:alpine
+    container_name: couple-watch-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - couple-watch-network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: couple-watch-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-couple_watch}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_USER: ${DB_USERNAME:-couple_watch}
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - couple-watch-network
+    ports:
+      - "3307:3306"
+
+  redis:
+    image: redis:alpine
+    container_name: couple-watch-redis
+    restart: unless-stopped
+    networks:
+      - couple-watch-network
+    ports:
+      - "6379:6379"
+
+networks:
+  couple-watch-network:
+    driver: bridge
+
+volumes:
+  db-data:

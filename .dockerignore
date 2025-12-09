@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+node_modules
+vendor
+docker-compose.yml
+Dockerfile
+nginx.conf
+README.md
+tests
+phpunit.xml
+.editorconfig
+.gitattributes
